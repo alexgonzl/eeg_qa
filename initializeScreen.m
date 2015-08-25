@@ -16,9 +16,8 @@ grey  = white/2;
 % Enable alpha blending for anti-aliasing
 Screen('BlendFunction', Window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 % Set fonts
-Screen('TextFont',Window,'Times');
-Screen('TextSize',Window,64);
-
+Screen('TextFont',Window,'Arial');
+Screen('TextSize',Window,30);
 
 HideCursor; % Remember to type ShowCursor later
 
