@@ -87,7 +87,7 @@ try
     % Screen and additional presentation parameters
     %---------------------------------------------------------------------%
     % Get keyboard number
-    [activeKeyboardID, laptopKeyboardID, pauseKey, resumeKey] = getKeyboardOr10key;
+    [activeKeyboardID, laptopKeyboardID, pauseKey, resumeKey] = getRespDevice;
     % initialize Keyboard Queue
     KbQueueCreate(activeKeyboardID);
     % Start keyboard queue
