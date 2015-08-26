@@ -4,7 +4,7 @@ function [Window, Rect] = initializeScreen
 
 % Here we call some default settings for setting up Psychtoolbox
 PsychDefaultSetup(2);
-Screen('Preference', 'SkipSyncTests', 1);
+Screen('Preference', 'SkipSyncTests', 0);
 
 screenNumber = max(Screen('Screens')); % 0 = main display
 white = WhiteIndex(screenNumber);
@@ -17,7 +17,7 @@ grey  = white/2;
 Screen('BlendFunction', Window, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 % Set fonts
 Screen('TextFont',Window,'Arial');
-Screen('TextSize',Window,30);
+Screen('TextSize',Window,36);
 
 HideCursor; % Remember to type ShowCursor later
 

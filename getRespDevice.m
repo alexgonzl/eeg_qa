@@ -12,6 +12,7 @@ function [activeKeyID, localKeyID, pauseKey, resumeKey] = getRespDevice
 % Alex's laptop productID = 601;
 % Mock Scanner 5 button box productID = 6;
 % Mock Scanner Belkin button box productID=38960;
+
 d = PsychHID('Devices');
 lapkey = 0;
 devkey = 0;
@@ -21,9 +22,7 @@ for n = 1:length(d)
     if strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==601)
         lapkey = n;
     elseif strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==38960)
-        devkey = n;
-    elseif strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==41002)
-        devkey = n;        
+        devkey = n;    
     end
 end
 

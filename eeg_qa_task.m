@@ -25,16 +25,17 @@ close all;
 sca;
 
 % Define colors
-RED     = [0.77 0.05 0.2];
+FixCrossTask1  = [0.1 0.1 0.1];
+FixCrossTask2  = [0.77 0.05 0.2];
 
-PsychDebugWindowConfiguration;
+%PsychDebugWindowConfiguration;
 
 % Presentation Parameters
 PresParams = [];
 PresParams.Conditions            = {'eyesOpen','eyesClosed','arrows'};
-PresParams.TimeDur              = 15; % time duration per conditions
-PresParams.nMiniBlocks          = 20;
-PresParams.lineWidthPix         = 4;  % Set the line width for our fixation cross
+PresParams.TimeDur              = 10; % time duration per conditions
+PresParams.nMiniBlocks          = 10;
+PresParams.lineWidthPix         = 5;  % Set the line width for our fixation cross
 PresParams.arrowsITI            = 0.3;
 PresParams.arrowsMaxRespTime    = 3;
 nMiniBlocks             = PresParams.nMiniBlocks;
@@ -124,12 +125,12 @@ try
     %---------------------------------------------------------------------%
     
     % Task(a) instructions
-    cond1_instr = ['Task(a)\n'...
+    cond1_instr = ['Task(a): Fixation \n\n\n\n'...
         'Please focus to the fixation cross and try not to close your eyes.\n'...
         'Press ''' resumeKey ''' to begin.'];
     
     % Task(b) instructions
-    cond2i_instr = ['Task(b)\n'...
+    cond2i_instr = ['Task(b): Eyes Closed \n\n\n\n'...
         'Please close your eyes until the screen flashes.\n'...
         'Press ''' resumeKey ''' to begin.'];
     
@@ -137,7 +138,7 @@ try
         'Press ''' resumeKey ''' to continue.'];
     
     % Task(c) instructions
-    cond3_instr = ['Task(c)\n'...
+    cond3_instr = ['Task(c)\n\n\n\n'...
         'Please respond with '  PresParams.RespToCue1 ' for left arrows, '...
         'and ' PresParams.RespToCue2 ' for right arrows.\n'...
         'Press ''' resumeKey ''' to begin.'];
@@ -176,11 +177,12 @@ try
             switch currentCond
                 % Task(a)
                 case 1
-                    DrawFormattedText(window,cond1_instr, 'wrapat', 'center', 255, 75, [],[],[],[],[xCenter*0.1,0,screenXpixels*0.8,screenYpixels]);
+                    DrawFormattedText(window,cond1_instr, 'center', 'center', ...
+                        255, 75, [],[],[],[]);
                     Screen('Flip',window);
                     WaitTillResumeKey(resumeKey,activeKeyboardID)
                     
-                    Screen('DrawLines', window, fixCrossCoords,PresParams.lineWidthPix, RED, [0 0], 2);
+                    Screen('DrawLines', window, fixCrossCoords,PresParams.lineWidthPix, FixCrossTask1, [0 0], 2);
                     [flip.VBLTimestamp, flip.StimulusOnsetTime, flip.FlipTimestamp, flip.Missed, flip.Beampos,] ...
                         = Screen('Flip', window);
                     TimingInfo.eyesOpenCondFlip{bb} = flip;
@@ -189,12 +191,12 @@ try
                     
                     % Task(b)
                 case 2
-                    DrawFormattedText(window,cond2i_instr, 'wrapat', 'center', 255, 75, ...
-                        [],[],[],[],[xCenter*0.1,0,screenXpixels*0.8,screenYpixels]);
+                    DrawFormattedText(window,cond2i_instr, 'center', 'center', 255, 75, ...
+                        [],[],[],[]);
                     Screen('Flip',window);
                     WaitTillResumeKey(resumeKey,activeKeyboardID)
                     
-                    Screen('DrawLines', window, fixCrossCoords,PresParams.lineWidthPix, RED, [0 0], 2);
+                    Screen('DrawLines', window, fixCrossCoords,PresParams.lineWidthPix, FixCrossTask2, [0 0], 2);
                     [flip.VBLTimestamp, flip.StimulusOnsetTime, flip.FlipTimestamp, flip.Missed, flip.Beampos,] ...
                         = Screen('Flip', window);
                     TimingInfo.eyesClosedCondFlip{bb} = flip;
@@ -209,19 +211,19 @@ try
                             break
                         end
                         Screen('DrawTexture', window,flashTM{mod(cnt,2)+1});
-                        DrawFormattedText(window,cond2ii_instr, 'center', 0.8*screenYpixels);
+                        DrawFormattedText(window,cond2ii_instr, 'center', 0.75*screenYpixels);
                         Screen('Flip', window);
                         cnt = cnt+1;
                     end
                     
                     % Task(c)
                 case 3
-                    DrawFormattedText(window,cond3_instr, 'wrapat', 'center', 255, 75, ...
-                        [],[],[],[],[xCenter*0.1,0,screenXpixels*0.8,screenYpixels]);
+                    DrawFormattedText(window,cond3_instr, 'center', 'center', 255, 75, ...
+                        [],[],[],[]);
                     Screen('Flip',window);
                     WaitTillResumeKey(resumeKey,activeKeyboardID)
                     
-                    Screen('DrawLines', window, fixCrossCoords,PresParams.lineWidthPix, RED, [0 0], 2);
+                    Screen('DrawLines', window, fixCrossCoords,PresParams.lineWidthPix, FixCrossTask1, [0 0], 2);
                     [flip.VBLTimestamp, flip.StimulusOnsetTime, flip.FlipTimestamp, flip.Missed, flip.Beampos,] ...
                         = Screen('Flip', window);
                     TimingInfo.arrowsCondFlip{bb} = flip;
