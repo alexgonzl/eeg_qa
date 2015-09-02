@@ -200,7 +200,7 @@ try
                     TimingInfo.eyesOpenCondFlip{bb} = flip;
                     
                     if PresParams.NetStationFlag
-                        NetStation('Event','EO',TimingInfo.eyesOpenCondFlip{bb});
+                        NetStation('Event','EO',TimingInfo.eyesOpenCondFlip{bb}.VBLTimestamp);
                     end                    
                     WaitSecs(PresParams.TimeDur)
                     
@@ -217,7 +217,7 @@ try
                     TimingInfo.eyesClosedCondFlip{bb} = flip;
                     
                     if PresParams.NetStationFlag
-                        NetStation('Event','EC',TimingInfo.eyesClosedCondFlip{bb});
+                        NetStation('Event','EC',TimingInfo.eyesClosedCondFlip{bb}.VBLTimestamp);
                     end
                     WaitSecs(PresParams.TimeDur)
                     
