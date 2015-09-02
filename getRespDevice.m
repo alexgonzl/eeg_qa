@@ -10,8 +10,10 @@ function [activeKeyID, localKeyID, pauseKey, resumeKey] = getRespDevice
 % Karen's desktop: productID=544
 % Recursion: productID=5
 % Alex's laptop productID = 601;
+% Curtis laptop productID = 594;
 % Mock Scanner 5 button box productID = 6;
 % Mock Scanner Belkin button box productID=38960;
+% Wagner 10 key= 41002
 
 d = PsychHID('Devices');
 lapkey = 0;
@@ -19,10 +21,12 @@ devkey = 0;
 % x=strfind({d.usageName},'Keyboard');
 % find(~cellfun(@isempty,x))
 for n = 1:length(d)
-    if strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==601)
+    if strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==594)
         lapkey = n;
     elseif strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==38960)
-        devkey = n;    
+        devkey = n;   
+    elseif strcmp(d(n).usageName,'Keyboard')&&(d(n).productID==41002)
+        devkey = n;   
     end
 end
 
