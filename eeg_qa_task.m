@@ -15,7 +15,7 @@ function [out,msg]=eeg_qa_task(thePath)
 %------------------------------------------------------------------------%
 % Author:       Alex Gonzalez
 % Created:      Aug 24th, 2015
-% LastUpdate:   Aug 25th, 2015
+% LastUpdate:   Sept 2, 2015
 %------------------------------------------------------------------------%
 
 %% Set-up
@@ -27,7 +27,6 @@ sca;
 % Define colors
 FixCrossTask1  = [0.1 0.1 0.1];
 FixCrossTask2  = [0.77 0.05 0.2];
-
 %PsychDebugWindowConfiguration;
 
 % Presentation Parameters
@@ -38,6 +37,8 @@ PresParams.nMiniBlocks          = 10;
 PresParams.lineWidthPix         = 5;  % Set the line width for our fixation cross
 PresParams.arrowsITI            = 0.3;
 PresParams.arrowsMaxRespTime    = 3;
+PresParams.NetStationFlag       = 1;
+PresParams.NetStationIP         = '10.0.0.42';
 nMiniBlocks             = PresParams.nMiniBlocks;
 nConds                  = numel(PresParams.Conditions);
 
@@ -78,6 +79,7 @@ TimingInfo = [];
 TimingInfo.eyesOpenCondFlip = cell(PresParams.nMiniBlocks,1);
 TimingInfo.eyesClosedCondFlip= cell(PresParams.nMiniBlocks,1);
 TimingInfo.arrowsCondFlip   = cell(PresParams.nMiniBlocks,1);
+TimingInfo.arrowsPresFlip   = cell(PresParams.nMiniBlocks,1);
 TimingInfo.arrowsRTs        = cell(PresParams.nMiniBlocks,1);
 TimingInfo.arrowsCond       = cell(PresParams.nMiniBlocks,1);
 TimingInfo.arrowsResp       = cell(PresParams.nMiniBlocks,1);
@@ -100,6 +102,16 @@ try
     else
         PresParams.RespToCue1 = keypadResponseKeys(1);
         PresParams.RespToCue2 = keypadResponseKeys(2);
+    end
+    
+    if PresParams.NetStationFlag
+        [status, er]= NetStation('Connect',PresParams.NetStationIP);
+        if status~=0
+            error(er)
+        end
+        NetStation('Synchronize');
+        NetStation('StartRecording')
+        NetStation('FlushReadbuffer');
     end
     
     % initialie window
@@ -187,6 +199,9 @@ try
                         = Screen('Flip', window);
                     TimingInfo.eyesOpenCondFlip{bb} = flip;
                     
+                    if PresParams.NetStationFlag
+                        NetStation('Event','EO',TimingInfo.eyesOpenCondFlip{bb});
+                    end                    
                     WaitSecs(PresParams.TimeDur)
                     
                     % Task(b)
@@ -201,6 +216,9 @@ try
                         = Screen('Flip', window);
                     TimingInfo.eyesClosedCondFlip{bb} = flip;
                     
+                    if PresParams.NetStationFlag
+                        NetStation('Event','EC',TimingInfo.eyesClosedCondFlip{bb});
+                    end
                     WaitSecs(PresParams.TimeDur)
                     
                     % flip screens until response is made
@@ -245,7 +263,12 @@ try
                         DrawFormattedText(window, arrow,'center','center',255);
                         [flip.VBLTimestamp, flip.StimulusOnsetTime, flip.FlipTimestamp, flip.Missed, ...
                             flip.Beampos] = Screen('Flip',window);
+                        TimingInfo.arrowsPresFlip{bb}(tt) = flip.VBLTimestamp;
                         trialTime = GetSecs;
+                        
+                        if PresParams.NetStationFlag
+                            NetStation('Event','A',TimingInfo.arrowsPresFlip{bb}(tt));
+                        end
                         
                         % display until response
                         [secs,key]=KbQueueWait2(activeKeyboardID,PresParams.arrowsMaxRespTime);
@@ -272,6 +295,11 @@ try
         % save every mini-block
         tempName = sprintf('/eeg_qa.s%i.block%i.%s.mat;', thePath.subjNum,bb,datestr(now,'dd.mm.yyyy.HH.MM'));
         save([thePath.subjectPath,tempName],'TimingInfo');
+        
+        if PresParams.NetStationFlag            
+            NetStation('Synchronize');
+            NetStation('FlushReadbuffer');
+        end
     end
     
     %---------------------------------------------------------------------%
@@ -305,6 +333,9 @@ try
     Screen('Flip',window);
     WaitTillResumeKey(resumeKey,activeKeyboardID)
     
+    if PresParams.NetStationFlag            
+        NetStation('StopRecording');            
+    end
     msg='allGood';
 catch msg
     sca
