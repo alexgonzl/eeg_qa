@@ -200,7 +200,7 @@ try
                     TimingInfo.eyesOpenCondFlip{bb} = flip;
                     
                     if PresParams.NetStationFlag
-                        NetStation('Event','EO',TimingInfo.eyesOpenCondFlip{bb}.VBLTimestamp);
+                        NetStation('Event','EOB',TimingInfo.eyesOpenCondFlip{bb}.VBLTimestamp);
                     end                    
                     WaitSecs(PresParams.TimeDur)
                     
@@ -217,7 +217,7 @@ try
                     TimingInfo.eyesClosedCondFlip{bb} = flip;
                     
                     if PresParams.NetStationFlag
-                        NetStation('Event','EC',TimingInfo.eyesClosedCondFlip{bb}.VBLTimestamp);
+                        NetStation('Event','ECB',TimingInfo.eyesClosedCondFlip{bb}.VBLTimestamp);
                     end
                     WaitSecs(PresParams.TimeDur)
                     
@@ -245,7 +245,9 @@ try
                     [flip.VBLTimestamp, flip.StimulusOnsetTime, flip.FlipTimestamp, flip.Missed, flip.Beampos,] ...
                         = Screen('Flip', window);
                     TimingInfo.arrowsCondFlip{bb} = flip;
-                    
+                    if PresParams.NetStationFlag
+                            NetStation('Event','AB',flip);
+                    end
                     
                     TimeLimit = GetSecs + PresParams.TimeDur;
                     tt = 1;
