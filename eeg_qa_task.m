@@ -1,4 +1,3 @@
-
 function [out,msg]=eeg_qa_task(thePath)
 %
 % [out,msg]=eeg_qa_task(thePath)
@@ -15,7 +14,7 @@ function [out,msg]=eeg_qa_task(thePath)
 %------------------------------------------------------------------------%
 % Author:       Alex Gonzalez
 % Created:      Aug 24th, 2015
-% LastUpdate:   Sept 2, 2015
+% LastUpdate:   July 5, 2016
 %------------------------------------------------------------------------%
 
 %% Set-up
@@ -37,10 +36,17 @@ PresParams.nMiniBlocks          = 10;
 PresParams.lineWidthPix         = 5;  % Set the line width for our fixation cross
 PresParams.arrowsITI            = 0.3;
 PresParams.arrowsMaxRespTime    = 3;
-PresParams.NetStationFlag       = 1;
+PresParams.NetStationFlag       = 0;
 PresParams.NetStationIP         = '10.0.0.42';
+PresParams.Scanned              = 1;
 nMiniBlocks             = PresParams.nMiniBlocks;
 nConds                  = numel(PresParams.Conditions);
+
+if PresParams.Scanned 
+    PresParams.PostInstBuffer = 10;
+else
+    PresParams.PostInstBuffer = 0;
+end
 
 % set stimulus order, no back-to-back conds.
 PresParams.CondOrder            = zeros(nMiniBlocks,nConds);
@@ -58,6 +64,9 @@ end
 % Keyboard. this is for the arrows task.
 laptopResponseKeys = ['k','l'];
 keypadResponseKeys = ['1','2'];
+scannerResponseKeys  = ['9','8'];
+scannerResponseInst  = {'Index Finger','Middle Finger'};
+
 if mod(thePath.subjNum,2)
     responseMap = [1,2];
 else
@@ -65,6 +74,8 @@ else
 end
 laptopResponseKeys = laptopResponseKeys(responseMap);
 keypadResponseKeys = keypadResponseKeys(responseMap);
+scannerResponseKeys = scannerResponseKeys(responseMap);
+scannerResponseInst = scannerResponseInst(responseMap);
 
 PresParams.keypadResponseKeys=keypadResponseKeys;
 PresParams.laptopResponseKeys=laptopResponseKeys;
@@ -90,18 +101,29 @@ try
     % Screen and additional presentation parameters
     %---------------------------------------------------------------------%
     % Get keyboard number
-    [activeKeyboardID, laptopKeyboardID, pauseKey, resumeKey] = getRespDevice;
+    if PresParams.Scanned
+        [activeKeyboardID, laptopKeyboardID, pauseKey, resumeKey] = getRespDeviceScanner;
+        disp(activeKeyboardID);
+        disp(laptopKeyboardID);
+        disp(resumeKey);
+    else
+        [activeKeyboardID, laptopKeyboardID, pauseKey, resumeKey] = getRespDevice;        
+    end
+    
     % initialize Keyboard Queue
     KbQueueCreate(activeKeyboardID);
     % Start keyboard queue
     KbQueueStart(activeKeyboardID);
     
     if laptopKeyboardID==activeKeyboardID
-        PresParams.RespToCue1 = laptopResponseKeys(1);
-        PresParams.RespToCue2 = laptopResponseKeys(2);
+        PresParams.RespToCue = laptopResponseKeys;        
+        InstructionKeys      = PresParams.RespToCue;
+    elseif PresParams.Scanned
+        PresParams.RespToCue = scannerResponseKeys;
+        InstructionKeys      = scannerResponseInst;
     else
-        PresParams.RespToCue1 = keypadResponseKeys(1);
-        PresParams.RespToCue2 = keypadResponseKeys(2);
+        PresParams.RespToCue = keypadResponseKeys;
+        InstructionKeys      = PresParams.RespToCue;
     end
     
     if PresParams.NetStationFlag
@@ -113,8 +135,9 @@ try
         NetStation('StartRecording')
         NetStation('FlushReadbuffer');
     end
+   
     
-    % initialie window
+    % initialize window
     [window, windowRect] = initializeScreen;
     screenXpixels = windowRect(3);
     screenYpixels = windowRect(4);
@@ -136,41 +159,81 @@ try
     % Participant Instructions
     %---------------------------------------------------------------------%
     
+    if PresParams.Scanned
+        resumeIntr = 'Index Finger';
+    else
+        resumeIntr = resumeKey;
+    end
     % Task(a) instructions
     cond1_instr = ['Task(a): Fixation \n\n\n\n'...
         'Please focus to the fixation cross and try not to close your eyes.\n'...
-        'Press ''' resumeKey ''' to begin.'];
+        'Press ''' resumeIntr ''' to begin.'];
     
     % Task(b) instructions
     cond2i_instr = ['Task(b): Eyes Closed \n\n\n\n'...
         'Please close your eyes until the screen flashes.\n'...
-        'Press ''' resumeKey ''' to begin.'];
+        'Press ''' resumeIntr ''' to begin.'];
     
     cond2ii_instr = ['Please open your eyes. \n'...
-        'Press ''' resumeKey ''' to continue.'];
+        'Press ''' resumeIntr ''' to continue.'];
     
     % Task(c) instructions
     cond3_instr = ['Task(c)\n\n\n\n'...
-        'Please respond with '  PresParams.RespToCue1 ' for left arrows, '...
-        'and ' PresParams.RespToCue2 ' for right arrows.\n'...
-        'Press ''' resumeKey ''' to begin.'];
+        'Please respond with '  InstructionKeys(1) ' for left arrows, '...
+        'and ' InstructionKeys(2) ' for right arrows.\n'...
+        'Press ''' resumeIntr ''' to begin.'];
+      % Task(c) instructions
+    cond3_instr = ['Task(c)\n\n\n\n'...
+        'Please respond with '  InstructionKeys{1} ' for left arrows, '...
+        'and ' InstructionKeys{2} ' for right arrows.\n'...
+        'Press ''' resumeIntr ''' to begin.'];
     
-    tstring = ['Instructions\n\n' ...
+    if PresParams.Scanned ==1
+        tstring = ['Instructions\n\n' ...
         'There are three tasks that will be presented at random. \n'...
-        'Task (a): you will be presented a fixation cross in which you will '...
+        'Task A: you will be presented a fixation cross in which you will '...
         'be asked to maintain fixation. \n' ...
-        'Task (b): you will be closing your eyes until the screen flashes, ' ...
+        'Task B: you will be closing your eyes until the screen flashes, ' ...
         'you will need to press the button to continue. \n'...
-        'Task (c): if a left arrow appears respond with the ' PresParams.RespToCue1 ...
-        ' key, if a right arrow appears respond with the ' PresParams.RespToCue2 ' key. \n\n'...
+        'Task C: if a left arrow appears respond with the ' InstructionKeys{1} ...
+        ' key, if a right arrow appears respond with the ' InstructionKeys{2} ' key. \n\n'...
+        'Get Ready!!!'];
+    else
+        tstring = ['Instructions\n\n' ...
+        'There are three tasks that will be presented at random. \n'...
+        'Task A: you will be presented a fixation cross in which you will '...
+        'be asked to maintain fixation. \n' ...
+        'Task B: you will be closing your eyes until the screen flashes, ' ...
+        'you will need to press the button to continue. \n'...
+        'Task C: if a left arrow appears respond with the ' InstructionKeys(1) ...
+        ' key, if a right arrow appears respond with the ' InstructionKeys(2) ' key. \n\n'...
         'Press ''' resumeKey ''' to begin the experiment.'];
-    
-    
+    end
+       
     DrawFormattedText(window,tstring, 'wrapat', 'center', 255, 75, [],[],[],[],[xCenter*0.1,0,screenXpixels*0.8,screenYpixels]);
     Screen('Flip',window);
     
     % resume if Resume Key is pressed
     WaitTillResumeKey(resumeKey,activeKeyboardID)
+    
+     
+    if PresParams.Scanned == 1
+        cnt = 1;
+        while 1
+            [errorFlag , scannerStartTime] = startScan_eprime;
+            if errorFlag==0
+                PresParams.scannerStartTime = scannerStartTime;
+                break                
+            end
+            cnt = cnt +1;
+            if cnt>=10
+                error('Could not trigger the scanner after 10 tries')
+            end            
+        end        
+    end
+    
+    WaitSecs(PresParams.PostInstBuffer)
+    
     
     %%
     %---------------------------------------------------------------------%
@@ -246,7 +309,7 @@ try
                         = Screen('Flip', window);
                     TimingInfo.arrowsCondFlip{bb} = flip;
                     if PresParams.NetStationFlag
-                            NetStation('Event','AB',flip);
+                        NetStation('Event','AB',flip.VBLTimestamp);
                     end
                     
                     TimeLimit = GetSecs + PresParams.TimeDur;
@@ -388,7 +451,8 @@ KbQueueFlush(activeKeyboardID);
 while 1
     [pressed,firstPress] = KbQueueCheck(activeKeyboardID);
     if pressed
-        if strcmp(resumeKey,KbName(firstPress));
+        key = KbName(firstPress);
+        if strcmp(num2str(resumeKey),key(1));
             break
         end
     end
